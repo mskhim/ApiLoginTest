@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
-
+import Header from "../../components/Header";
 const AdminMain = () => {
   const [test, setTest] = useState("");
   const [inputValue, setInputValue] = useState(""); // input 필드 값
-
+  const [userJWt, setUserJWT] = useState(localStorage.getItem("userJwt"));
+  const [userAccessToken, setUserAccessToken] = useState(
+    localStorage.getItem("accessToken")
+  );
   useEffect(() => {
+    setUserJWT(localStorage.getItem("userJwt"));
+    setUserAccessToken(localStorage.getItem("accessToken"));
     fetch("http://localhost:8080/admin/test", {
       method: "GET",
       headers: {
@@ -45,6 +50,7 @@ const AdminMain = () => {
 
   return (
     <div>
+      <Header />
       {test ? `Test Data: ${test}` : "Loading..."}
       <form action=""></form>
       <form onSubmit={handleInsertClick}>
@@ -56,6 +62,12 @@ const AdminMain = () => {
           onChange={(e) => setInputValue(e.target.value)} // 입력 필드 값 업데이트
         />
         <button type="submit">Submit</button>
+        {userJWt ? <h1>JWT: {userJWt}</h1> : <h1>JWT 없음</h1>}
+        {userAccessToken ? (
+          <h1>AccessToken: {userAccessToken}</h1>
+        ) : (
+          <h1>AccessToken 없음</h1>
+        )}
       </form>
     </div>
   );

@@ -15,11 +15,8 @@ const Header = () => {
     localStorage.removeItem("userJwt");
     localStorage.removeItem("userInfo");
     setUserJwt(null);
-
+    window.location.href = "/";
     // 네이버 로그아웃 후 메인 페이지로 리다이렉트
-    const redirectUrl = encodeURIComponent("http://localhost:3000/");
-    const naverLogoutUrl = `https://nid.naver.com/nidlogin.logout?returl=${redirectUrl}`;
-    window.open(naverLogoutUrl, "_self"); // 새 창이 아니라 현재 창에서 열기
   };
 
   // 로그인 함수 (로그인 페이지 이동 로직 추가 가능)

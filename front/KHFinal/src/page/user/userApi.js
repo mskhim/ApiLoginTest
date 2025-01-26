@@ -1,46 +1,108 @@
-const API_BASE_URL = "http://localhost:8080/user"; // 스프링 부트 user API 경로
+const NAVER_API_BASE_URL = "http://localhost:8080/user/naver"; // 스프링 부트 네이버 로그인 API 경로
+const KAKAO_API_BASE_URL = "http://localhost:8080/user/kakao"; // 스프링 부트 카카오 로그인 API 경로
 
-// 네이버 로그인 URL 가져오기
-export const getAuthUrl = async () => {
+/**
+ * 네이버 로그인 URL 가져오기
+ * 스프링부트에서 생성된 네이버 인증 URL을 요청합니다.
+ */
+export const getNaverAuthUrl = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/auth-url`);
+    const response = await fetch(`${NAVER_API_BASE_URL}/auth-url`);
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const url = await response.text(); // 응답의 실제 텍스트 가져오기
-    return url; // 네이버 로그인 URL 반환
+    const url = await response.text(); // 서버에서 반환한 네이버 로그인 URL
+    return url;
   } catch (error) {
     console.error("네이버 로그인 URL 요청 실패:", error);
     throw error;
   }
 };
-// 콜백 처리 (Access Token 및 사용자 정보 요청)
-export const handleCallback = async (code, state) => {
+
+/**
+ * 카카오 로그인 URL 가져오기
+ * 스프링부트에서 생성된 카카오 인증 URL을 요청합니다.
+ */
+export const getKakaoAuthUrl = async () => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/callback?code=${code}&state=${state}`
-    );
+    const response = await fetch(`${KAKAO_API_BASE_URL}/auth-url`);
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const data = await response.json(); // JSON 데이터 파싱
-    const accessToken = data.accessToken; // Access Token
-    const userInfo = data.userInfo; // 사용자 정보
-    const userJwt = data.userJwt; // 사용자 정보
 
-    if (accessToken) {
-      localStorage.setItem("accessToken", accessToken); // Access Token 저장
-      localStorage.setItem("userJwt", userJwt); // Access Token 저장
+    const url = await response.text(); // 서버에서 반환한 카카오 로그인 URL
+    return url;
+  } catch (error) {
+    console.error("카카오 로그인 URL 요청 실패:", error);
+    throw error;
+  }
+};
 
-      console.log("Access Token 저장 완료:", accessToken);
-    } else {
-      console.error("Access Token이 없습니다!");
+/**
+ * 네이버 콜백 처리: Access Token 및 사용자 정보 요청
+ * 스프링부트로부터 Access Token과 사용자 정보를 가져옵니다.
+ */
+export const handleNaverCallback = async (code, state) => {
+  try {
+    const response = await fetch(
+      `${NAVER_API_BASE_URL}/callback?code=${code}&state=${state}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return { accessToken, userInfo }; // Access Token과 사용자 정보 반환
+    const data = await response.json();
+    const accessToken = data.accessToken; // Access Token
+    const userInfo = data.userInfo; // 사용자 정보
+    const userJwt = data.userJwt; // 사용자 JWT 토큰
+
+    if (accessToken && userJwt) {
+      localStorage.setItem("accessToken", accessToken); // Access Token 저장
+      localStorage.setItem("userJwt", userJwt); // 사용자 JWT 저장
+      console.log("네이버 Access Token과 JWT 저장 완료");
+    } else {
+      console.error("네이버 Access Token 또는 사용자 JWT가 없습니다!");
+    }
+
+    return { accessToken, userInfo };
   } catch (error) {
-    console.error("콜백 처리 실패:", error);
+    console.error("네이버 콜백 처리 실패:", error);
+    throw error;
+  }
+};
+
+/**
+ * 카카오 콜백 처리: Access Token 및 사용자 정보 요청
+ * 스프링부트로부터 Access Token과 사용자 정보를 가져옵니다.
+ */
+export const handleKakaoCallback = async (code) => {
+  try {
+    const response = await fetch(`${KAKAO_API_BASE_URL}/callback?code=${code}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const accessToken = data.accessToken; // Access Token
+    const userInfo = data.userInfo; // 사용자 정보
+    const userJwt = data.userJwt; // 사용자 JWT 토큰
+
+    if (accessToken && userJwt) {
+      localStorage.setItem("accessToken", accessToken); // Access Token 저장
+      localStorage.setItem("userJwt", userJwt); // 사용자 JWT 저장
+      console.log("카카오 Access Token과 JWT 저장 완료");
+    } else {
+      console.error("카카오 Access Token 또는 사용자 JWT가 없습니다!");
+    }
+
+    return { accessToken, userInfo };
+  } catch (error) {
+    console.error("카카오 콜백 처리 실패:", error);
     throw error;
   }
 };
