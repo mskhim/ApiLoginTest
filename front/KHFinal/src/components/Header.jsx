@@ -1,29 +1,30 @@
-import React, { useEffect, useState } from "react";
-import "./Header.css";
+import React, { useEffect, useState } from 'react';
+import './Header.css';
 
 const Header = () => {
   // userJwt 상태 관리
-  const [userJwt, setUserJwt] = useState(localStorage.getItem("userJwt"));
+  const [userJwt, setUserJwt] = useState(localStorage.getItem('userJwt'));
   useEffect(() => {
-    const jwt = localStorage.getItem("userJwt");
+    const jwt = localStorage.getItem('userJwt');
     setUserJwt(jwt); // 로컬 스토리지 값으로 상태 초기화
   }, []);
   // 로그아웃 함수
   const handleLogout = () => {
-    alert(userJwt + "님, 로그아웃 되었습니다.");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userJwt");
-    localStorage.removeItem("userInfo");
+    alert(userJwt + '님, 로그아웃 되었습니다.');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('userJwt');
+    localStorage.removeItem('user');
+    localStorage.removeItem('isRegist');
     setUserJwt(null);
-    window.location.href = "/";
+    window.location.href = '/';
     // 네이버 로그아웃 후 메인 페이지로 리다이렉트
   };
 
   // 로그인 함수 (로그인 페이지 이동 로직 추가 가능)
   const handleLogin = () => {
-    alert("로그인 페이지로 이동합니다.");
+    alert('로그인 페이지로 이동합니다.');
     // 로그인 페이지로 이동 로직
-    window.location.href = "/userLoginPage";
+    window.location.href = '/userLoginPage';
   };
 
   return (

@@ -1,5 +1,6 @@
 package com.zeus.user.service;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zeus.user.domain.User;
 import com.zeus.user.mapper.UserMapper;
 
 import io.jsonwebtoken.Jwts;
@@ -40,13 +42,35 @@ public class UserServiceImpl implements UserService {
     @Value("${kakao.redirect-uri}")
     private String kakaoRedirectUri;
 
-    @Value("${jwt.secret}") // application.properties에서 비밀키 읽기
-    private String secretKey;
+
 
     private final long EXPIRATION_TIME = 1000 * 60 * 60; // 1시간 (밀리초 단위)
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    // ================== UserMapper 메서드 추가 ==================
+    @Override
+    public boolean insert(User user) {
+        try {
+            return mapper.insert(user);
+        } catch (Exception e) {
+            log.error("User Insert Error: {}", e.getMessage());
+            throw new RuntimeException("User 데이터 삽입 실패", e);
+        }
+    }
+
+    @Override
+    public boolean checkRegist(User user) {
+        try {
+            int count = mapper.checkRegist(user);
+            return count == 0; // 중복이 없으면 true
+        } catch (Exception e) {
+            log.error("User CheckRegist Error: {}", e.getMessage());
+            throw new RuntimeException("중복 체크 실패", e);
+        }
+    }
+
+    
     // ================== 네이버 로그인 ==================
     @Override
     public String getNaverAuthUrl() {
@@ -123,23 +147,6 @@ public class UserServiceImpl implements UserService {
         return response.getBody();
     }
 
-    // ================== JWT 관련 ==================
-    @Override
-    public boolean validateJwt(String token) {
-        try {
-            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token); // 비밀키로 서명 검증
-            return true;
-        } catch (Exception e) {
-            return false; // 검증 실패
-        }
-    }
 
-    @Override
-    public String getJwt(String username) {
-        return Jwts.builder().setSubject(username).setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS256, secretKey) // 비밀키로 서명
-                .compact();
-    }
 }
 

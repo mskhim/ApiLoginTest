@@ -1,9 +1,11 @@
 package com.zeus.user.mapper;
 
+import com.zeus.user.domain.User;
+
 public interface UserMapper {
 	
-	public boolean insert();
-	public boolean checkRegist();
+	public boolean insert(User user);
+	public int checkRegist(User user);
 	
 
 }

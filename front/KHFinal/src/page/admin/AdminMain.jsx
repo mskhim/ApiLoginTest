@@ -1,19 +1,20 @@
-import { useState, useEffect } from "react";
-import Header from "../../components/Header";
+import { useState, useEffect } from 'react';
+import Header from '../../components/Header';
 const AdminMain = () => {
-  const [test, setTest] = useState("");
-  const [inputValue, setInputValue] = useState(""); // input 필드 값
-  const [userJWt, setUserJWT] = useState(localStorage.getItem("userJwt"));
+  const [test, setTest] = useState('');
+  const [inputValue, setInputValue] = useState(''); // input 필드 값
+  const [userJWt, setUserJWT] = useState(localStorage.getItem('userJwt'));
   const [userAccessToken, setUserAccessToken] = useState(
-    localStorage.getItem("accessToken")
+    localStorage.getItem('accessToken')
   );
+  const [user, setUser] = useState(localStorage.getItem('user'));
   useEffect(() => {
-    setUserJWT(localStorage.getItem("userJwt"));
-    setUserAccessToken(localStorage.getItem("accessToken"));
-    fetch("http://localhost:8080/admin/test", {
-      method: "GET",
+    setUserJWT(localStorage.getItem('userJwt'));
+    setUserAccessToken(localStorage.getItem('accessToken'));
+    fetch('http://localhost:8080/admin/test', {
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json", // 요청 헤더 설정
+        'Content-Type': 'application/json', // 요청 헤더 설정
       },
     })
       .then((res) => {
@@ -26,7 +27,7 @@ const AdminMain = () => {
         setTest(data.test); // 서버에서 "test" 키의 값을 설정
       })
       .catch((error) => {
-        console.error("Error fetching data:", error);
+        console.error('Error fetching data:', error);
       });
   }, []);
 
@@ -35,14 +36,14 @@ const AdminMain = () => {
     e.preventDefault(); // 폼의 기본 동작(페이지 새로고침)을 막음
 
     if (!inputValue.trim()) {
-      alert("Input field cannot be empty!");
+      alert('Input field cannot be empty!');
       return;
     }
 
-    fetch("http://localhost:8080/admin/insert", {
-      method: "POST", // POST 요청으로 데이터 전송
+    fetch('http://localhost:8080/admin/insert', {
+      method: 'POST', // POST 요청으로 데이터 전송
       headers: {
-        "Content-Type": "application/json", // JSON 형식으로 데이터 전송
+        'Content-Type': 'application/json', // JSON 형식으로 데이터 전송
       },
       body: JSON.stringify({ name: inputValue }), // 입력 값 전송
     });
@@ -51,7 +52,7 @@ const AdminMain = () => {
   return (
     <div>
       <Header />
-      {test ? `Test Data: ${test}` : "Loading..."}
+      {test ? `Test Data: ${test}` : 'Loading...'}
       <form action=""></form>
       <form onSubmit={handleInsertClick}>
         <input
@@ -68,6 +69,7 @@ const AdminMain = () => {
         ) : (
           <h1>AccessToken 없음</h1>
         )}
+        {user ? <h1>User: {user}</h1> : <h1>User 없음</h1>}
       </form>
     </div>
   );
