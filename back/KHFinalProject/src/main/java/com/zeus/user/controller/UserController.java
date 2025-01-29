@@ -68,7 +68,6 @@ public class UserController {
         // Access Token 요청
         String accessToken = service.getNaverAccessToken(code, state);
         log.info("네이버 엑세스 토큰 생성 완료");
-
         // 사용자 정보 요청
         String userInfo = service.getNaverUserInfo(accessToken);
         String provider ="naver";
@@ -108,16 +107,11 @@ public class UserController {
         // 사용자 등록 여부 확인
         boolean isRegist = service.checkRegist(user);
         
-        // JWT 생성
-        String userJwt = JwtUtil.getJwt(user);
-        log.info(userJwt);
-
         
         // Access Token과 사용자 정보를 JSON으로 반환
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", accessToken); // 엑세스 토큰
         response.put("userInfo", userInfo); // 사용자 정보 (원래 JSON 문자열 그대로 전달)
-        response.put("userJwt", userJwt); // 생성된 사용자 JWT
         response.put("isRegist", isRegist); // 사용자 등록 여부 추가
         return ResponseEntity.ok(response); // JSON 응답
     }
@@ -178,10 +172,6 @@ public class UserController {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to parse user info"));
         }
 
-        // JWT 생성
-        String userJwt = JwtUtil.getJwt(user);
-        log.info("Generated JWT: {}", userJwt);
-        
         // 사용자 등록 여부 확인
         
         log.info(user.getId());
@@ -192,9 +182,34 @@ public class UserController {
         Map<String, Object> response = new HashMap<>();
         response.put("accessToken", accessToken); // 엑세스 토큰
         response.put("userInfo", userInfo); // 사용자 정보 (원래 JSON 문자열 그대로 전달)
-        response.put("userJwt", userJwt); // 생성된 사용자 JWT
         response.put("isRegist", isRegist); // 사용자 등록 여부 추가
         return ResponseEntity.ok(response); // JSON 응답
 
+    }
+    //로그인 처리
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> login(@RequestBody User user) {
+        // DB에서 사용자 확인
+    	log.info("/login이 받는 유저아이디"+user.getId());
+        User user2 = service.getUserByIdAndProvider(user);
+
+        if (user2 == null) {
+            return ResponseEntity.status(404).body(Map.of(
+                "success", false,
+                "message", "등록되지 않은 사용자입니다. 회원가입이 필요합니다."
+            ));
+        }
+        // JWT 생성
+        String userJwt = JwtUtil.getJwt(user2);
+        log.info("✅ JWT 생성 완료: {}", userJwt);
+
+        // 응답 데이터 생성
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "로그인 성공!");
+        response.put("userJwt", userJwt);
+        response.put("user", user2);
+
+        return ResponseEntity.ok(response);
     }
 }

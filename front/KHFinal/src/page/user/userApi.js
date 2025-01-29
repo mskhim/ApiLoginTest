@@ -57,9 +57,9 @@ export const handleNaverCallback = async (code, state) => {
 
     const data = await response.json();
 
-    const { accessToken, userInfo, userJwt, isRegist } = data; // 응답 데이터 구조 분해
+    const { accessToken, userInfo, isRegist } = data; // 응답 데이터 구조 분해
 
-    return { accessToken, userInfo, isRegist, userJwt }; // isRegist 추가 반환
+    return { accessToken, userInfo, isRegist }; // isRegist 추가 반환
   } catch (error) {
     console.error('네이버 콜백 처리 실패:', error);
     throw error;
@@ -79,9 +79,8 @@ export const handleKakaoCallback = async (code) => {
     }
 
     const data = await response.json();
-    const { accessToken, userInfo, userJwt, isRegist } = data; // 응답 데이터 구조 분해
-
-    return { accessToken, userInfo, isRegist, userJwt }; // isRegist 추가 반환
+    const { accessToken, userInfo, isRegist } = data; // 응답 데이터 구조 분해
+    return { accessToken, userInfo, isRegist }; // isRegist 추가 반환
   } catch (error) {
     console.error('카카오 콜백 처리 실패:', error);
     throw error;
@@ -92,7 +91,6 @@ export const handleKakaoCallback = async (code) => {
  */
 export const handleRegister = async (formData) => {
   try {
-    alert(formData.name);
     const response = await fetch('http://localhost:8080/user/insert', {
       method: 'POST',
       headers: {
@@ -107,11 +105,42 @@ export const handleRegister = async (formData) => {
 
     const data = await response.json();
     alert('회원가입이 완료되었습니다. 이전페이지로 이동합니다.');
-    window.history.go(-31); // 이전 페이지로 이동
+    window.history.go(-3); // 이전 페이지로 이동
     return data;
   } catch (error) {
     console.error('회원가입 요청 실패:', error);
     alert('회원가입 중 오류가 발생했습니다. ' + error.message);
     throw error;
+  }
+};
+
+/*
+ 로그인처리
+ */
+export const handleLogin = async (id, provider) => {
+  console.log('🚀 로그인 요청:', id, provider);
+  try {
+    const response = await fetch('http://localhost:8080/user/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: String(id), // 🔹 id를 String으로 변환
+        provider: provider || '', // 🔹 provider 값이 없을 경우 빈 문자열로 설정
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      localStorage.setItem('userJwt', data.userJwt);
+      alert('로그인 성공!');
+      window.history.go(-2); // 로그인 후 이동할 페이지
+    } else {
+      alert(data.message);
+    }
+  } catch (error) {
+    console.error('로그인 요청 실패:', error);
   }
 };

@@ -1,8 +1,10 @@
 package com.zeus.user.domain;
 
-import lombok.Data;
 import java.time.LocalDate;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+@NoArgsConstructor
 @Data
 public class User {
     private int no;                // 시퀀스 번호

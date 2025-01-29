@@ -40,7 +40,7 @@ public class JwtUtil {
                 .claim("gender", String.valueOf(user.getGender()))
                 .claim("birth", birthDate) // 수정된 부분
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) 
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))    
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }

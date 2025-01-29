@@ -1,8 +1,5 @@
 package com.zeus.user.service;
 
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -17,8 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zeus.user.domain.User;
 import com.zeus.user.mapper.UserMapper;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -41,6 +38,8 @@ public class UserServiceImpl implements UserService {
 
     @Value("${kakao.redirect-uri}")
     private String kakaoRedirectUri;
+    @Value("${jwt.secret}") // application.properties에서 비밀키 읽기
+    private String secretKey;
 
 
 
@@ -49,6 +48,10 @@ public class UserServiceImpl implements UserService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     // ================== UserMapper 메서드 추가 ==================
+    @Override
+    public User getUserByIdAndProvider(User user) {
+        return mapper.findUserByIdAndProvider(user);
+    }
     @Override
     public boolean insert(User user) {
         try {
@@ -72,6 +75,39 @@ public class UserServiceImpl implements UserService {
 
     
     // ================== 네이버 로그인 ==================
+ // 엑세스 토큰으로 DB에서 사용자 정보 조회
+    @Override
+    public User getUserByAccessToken(String accessToken) {
+        try {
+            // JWT 토큰 검증
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secretKey) // JWT 서명 검증을 위한 시크릿 키
+                    .parseClaimsJws(accessToken)
+                    .getBody();
+
+            // 토큰에서 사용자 정보 추출
+            String userId = claims.get("id", String.class);
+            String provider = claims.get("provider", String.class);
+
+            if (userId == null || provider == null) {
+                throw new RuntimeException("유효하지 않은 JWT 토큰입니다.");
+            }
+
+            // DB에서 사용자 조회
+            User setUser = new User();
+            setUser.setId(userId);
+            setUser.setProvider(provider);
+            User user = mapper.findUserByIdAndProvider(setUser);
+
+            if (user == null) {
+                throw new RuntimeException("해당 사용자를 찾을 수 없습니다.");
+            }
+            return user;
+        } catch (Exception e) {
+            log.error("토큰 기반 사용자 조회 실패: {}", e.getMessage());
+            return null;
+        }
+    }
     @Override
     public String getNaverAuthUrl() {
         return "https://nid.naver.com/oauth2.0/authorize?response_type=code" + "&client_id=" + naverClientId

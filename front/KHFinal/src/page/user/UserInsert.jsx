@@ -63,8 +63,22 @@ const UserInsert = () => {
       email: snsData.email || '', // 이메일
     });
     //컴포넌트 언마운트 시 localStorage에서 'user' 삭제
-    return () => {
+    const handleUnload = () => {
+      console.log('🚨 페이지를 떠남! localStorage에서 user & accessToken 삭제');
       localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
+    // ✅ 컴포넌트 언마운트 시 localStorage에서 'user' 삭제 (SPA 환경에서도 동작)
+    return () => {
+      console.log(
+        '🚨 컴포넌트 언마운트! localStorage에서 user & accessToken 삭제'
+      );
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      window.removeEventListener('beforeunload', handleUnload);
     };
   }, [navigate]);
 
