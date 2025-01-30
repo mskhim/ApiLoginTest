@@ -8,11 +8,13 @@
 	<!-- User 데이터 삽입 -->
 	<insert id="insert" parameterType="User">
 		INSERT INTO USER_ACCOUNT (
-		NO, ID, PWD, PHONE, GENDER, REG_DATE, ROLE, BIRTH, REGION, PROVIDER
+		NO, ID, PWD,NAME,EMAIL, PHONE, GENDER, REG_DATE, ROLE, BIRTH, REGION, PROVIDER
 		) VALUES (
 		SEQ_NO.NEXTVAL,
 		#{id},
 		#{pwd},
+		#{name},
+		#{email},
 		#{phone},
 		#{gender},
 		SYSDATE,

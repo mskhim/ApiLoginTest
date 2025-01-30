@@ -9,12 +9,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Collections;
+
 @Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -24,28 +26,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public JwtAuthenticationFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
-        String token = getTokenFromRequest(request);
-        log.info(token);
+        String token = getTokenFromCookie(request); // ✅ 쿠키에서 JWT 가져오기
         if (token != null) {
             try {
-                // JWT 검증
-                jwtUtil.validateToken(token);
+                // ✅ JWT 검증
+                Claims claims = jwtUtil.validateToken(token);
+                String authority = claims.get("role", String.class);
 
-                // Role 정보 추출
-                String role = jwtUtil.getRoleFromToken(token);
-                log.info(role);
-                // 인증 객체 생성 및 SecurityContext 설정
+                // ✅ ROLE 값이 있다면 "ROLE_" prefix 추가
+                log.info(authority);
+                // ✅ 인증 객체 생성 및 SecurityContext 설정
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(null, null,
-                                Collections.singletonList(new SimpleGrantedAuthority(role)));
+                                Collections.singletonList(new SimpleGrantedAuthority(authority)));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+
             } catch (Exception e) {
-                // 검증 실패 시 SecurityContext 초기화
+                log.error("🚨 JWT 검증 실패: {}", e.getMessage());
                 SecurityContextHolder.clearContext();
             }
         }
@@ -53,8 +54,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
-    private String getTokenFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        return (bearerToken != null && bearerToken.startsWith("Bearer ")) ? bearerToken.substring(7) : null;
+
+    /**
+     * ✅ JWT를 HttpOnly 쿠키에서 가져오는 메소드
+     */
+    private String getTokenFromCookie(HttpServletRequest request) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    return cookie.getValue(); // ✅ JWT 쿠키 반환
+                }
+            }
+        }
+        return null; // ✅ JWT 쿠키가 없으면 null 반환
     }
 }

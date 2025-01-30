@@ -1,92 +1,57 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { handleRegister } from './userApi';
+
 const UserInsert = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    id: '',
-    phone: '',
-    gender: '',
-    birth: '',
-    region: '',
-    provider: '',
-    name: '',
-    email: '',
-  });
+  const [formData, setFormData] = useState(null); // ✅ 초기 상태를 `null`로 설정
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-
+    const storedUser = sessionStorage.getItem('user'); // ✅ 세션 스토리지에서 사용자 정보 가져오기
     if (!storedUser) {
       alert('잘못된 접근입니다.');
       navigate('/');
       return;
     }
 
-    // SNS 데이터 추출
-    const snsData = storedUser.response || storedUser.kakao_account || {};
+    const userData = JSON.parse(storedUser); // ✅ JSON 파싱
+    console.log('🔍 세션 스토리지에서 사용자 정보 가져오기:', userData);
 
-    // 생년월일 처리
-    const birthYear = snsData.birthyear || '';
-    const birthMonth = snsData.birthday?.slice(0, 2) || '';
-    const birthDay = snsData.birthday?.slice(-2) || '';
-    const birthDate =
-      birthYear && birthMonth && birthDay
-        ? `${birthYear}-${birthMonth}-${birthDay}`
-        : '';
-
-    // 전화번호 처리
-    const phoneNumber =
-      snsData.mobile ||
-      (snsData.phone_number ? `0${snsData.phone_number.slice(4)}  ` : '');
-
-    // 성별 처리
-    const gender =
-      snsData.gender === 'male' ? 'M' : snsData.gender === 'female' ? 'F' : '';
-
-    // SNS 제공자
-    const provider = storedUser.response
-      ? 'naver'
-      : storedUser.kakao_account
-      ? 'kakao'
-      : '';
-
-    // Form 데이터 설정
+    // ✅ 백엔드에서 변환한 `User` 객체를 그대로 사용
     setFormData({
-      id: storedUser.response?.id || storedUser.id || '', // SNS 고유 ID
-      phone: phoneNumber, // 전화번호
-      gender: gender, // 성별
-      birth: birthDate, // 생년월일
-      region: '', // 지역 (직접 입력)
-      provider: provider, // SNS 프로바이더
-      name: snsData.name || '', // 이름
-      email: snsData.email || '', // 이메일
+      id: userData.id,
+      phone: userData.phone,
+      gender: userData.gender,
+      birth: userData.birth,
+      region: '', // 사용자가 입력하도록 빈 값 유지
+      provider: userData.provider,
+      name: userData.name,
+      email: userData.email,
     });
-    //컴포넌트 언마운트 시 localStorage에서 'user' 삭제
-    const handleUnload = () => {
-      console.log('🚨 페이지를 떠남! localStorage에서 user & accessToken 삭제');
-      localStorage.removeItem('user');
-      localStorage.removeItem('accessToken');
-    };
 
-    window.addEventListener('beforeunload', handleUnload);
-
-    // ✅ 컴포넌트 언마운트 시 localStorage에서 'user' 삭제 (SPA 환경에서도 동작)
+    // ✅ 컴포넌트 언마운트 시 `sessionStorage`에서 'user' 삭제
     return () => {
-      console.log(
-        '🚨 컴포넌트 언마운트! localStorage에서 user & accessToken 삭제'
-      );
-      localStorage.removeItem('user');
-      localStorage.removeItem('accessToken');
-      window.removeEventListener('beforeunload', handleUnload);
+      console.log('🚨 컴포넌트 언마운트! sessionStorage에서 user 삭제');
+      sessionStorage.removeItem('user');
     };
   }, [navigate]);
 
-  //제출 핸들러
-  const handleSubmit = (e) => {
-    e.preventDefault(); // 기본 제출 동작 방지
-    handleRegister(formData); // formData를 handleRegister로 전달
+  // 제출 핸들러
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await handleRegister(formData); // ✅ 회원가입 API 호출
+
+      // ✅ 회원가입 성공 후, 로그인된 상태로 유지 → 자동으로 JWT 발급됨
+      const preLoginUrl = sessionStorage.getItem('preLoginUrl') || '/';
+      navigate(preLoginUrl);
+      sessionStorage.removeItem('preLoginUrl');
+    } catch (error) {
+      console.error('회원가입 실패:', error);
+      alert('회원가입 중 오류가 발생했습니다.');
+    }
   };
+
   // 입력값 변경 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,7 +61,7 @@ const UserInsert = () => {
     });
   };
 
-  if (!formData.provider) return <p>Loading...</p>;
+  if (!formData) return <p>Loading...</p>; // ✅ `formData`가 `null`이면 로딩 표시
 
   return (
     <div>

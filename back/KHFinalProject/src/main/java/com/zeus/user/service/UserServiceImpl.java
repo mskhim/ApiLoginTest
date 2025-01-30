@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
     public boolean checkRegist(User user) {
         try {
             int count = mapper.checkRegist(user);
-            return count == 0; // 중복이 없으면 true
+            return count == 0; // 중복이 없으면 true 등록이 안되어있다면 true
         } catch (Exception e) {
             log.error("User CheckRegist Error: {}", e.getMessage());
             throw new RuntimeException("중복 체크 실패", e);

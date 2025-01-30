@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   handleNaverCallback,
   handleKakaoCallback,
@@ -6,61 +7,47 @@ import {
 } from './userApi';
 
 const UserLoginSuccess = () => {
+  const navigate = useNavigate();
+
+  const handleSocialLogin = async (provider, code, state) => {
+    try {
+      let data;
+      if (provider === 'naver') {
+        data = await handleNaverCallback(code, state);
+      } else if (provider === 'kakao') {
+        data = await handleKakaoCallback(code);
+      }
+
+      console.log(`${provider} 사용자 정보:`, data);
+
+      if (!data.isRegistered) {
+        alert('회원가입이 필요합니다. 회원가입 페이지로 이동합니다.');
+        sessionStorage.setItem('user', JSON.stringify(data.user)); // ✅ 세션 스토리지에 사용자 정보 저장
+        navigate('/userInsert');
+      } else {
+        const userId = provider === 'naver' ? data.user.id : data.user.id;
+        await handleLogin(userId, provider); // ✅ JWT는 쿠키에 자동 저장됨
+
+        // ✅ 로그인 성공 후, 이전 페이지로 이동
+        const preLoginUrl = sessionStorage.getItem('preLoginUrl') || '/';
+        navigate(preLoginUrl);
+        sessionStorage.removeItem('preLoginUrl');
+      }
+    } catch (error) {
+      console.error(`${provider} 콜백 처리 실패:`, error);
+      alert('로그인 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   useEffect(() => {
-    // URL에서 code와 state 값 가져오기
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code'); // 인증 코드
-    const state = urlParams.get('state'); // state 값
-    const provider = urlParams.get('provider'); // provider 값 (추가)
-
-    if (provider === 'naver' && code && state) {
-      // 네이버 콜백 처리
-      handleNaverCallback(code, state)
-        .then((data) => {
-          console.log('네이버 사용자 정보:', data); // 전체 응답 데이터 출력
-          // isRegist 값 확인
-          alert('isRegist: ' + JSON.parse(data.userInfo).response.id);
-          if (data.isRegist == true) {
-            alert('회원가입이 필요합니다. 회원가입 페이지로 이동합니다.');
-            localStorage.setItem('user', data.userInfo); // 사용자 정보 저장
-            localStorage.setItem('accessToken', data.accessToken); // Access Token 저장
-            window.location.href = '/userInsert'; // 회원가입 페이지로 리다이렉트
-          } else {
-            localStorage.setItem('accessToken', data.accessToken); // Access Token 저장
-            handleLogin(JSON.parse(data.userInfo).response.id, 'naver');
-          }
-        })
-        .catch((error) => {
-          console.error('네이버 콜백 처리 실패:', error);
-          alert('로그인 처리 중 오류가 발생했습니다.');
-        });
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const provider = urlParams.get('provider');
+    if (provider && code) {
+      handleSocialLogin(provider, code, state);
     }
-
-    if (provider === 'kakao' && code) {
-      // 카카오 콜백 처리
-      handleKakaoCallback(code)
-        .then((data) => {
-          console.log('카카오 사용자 정보:', data); // 전체 응답 데이터 출력
-          console.log(data.userInfo);
-          // isRegist 값 확인
-          console.log('isRegist:', data.isRegist);
-          if (data.isRegist == true) {
-            // 회원가입이 필요한 경우
-            alert('회원가입이 필요합니다. 회원가입 페이지로 이동합니다.');
-            localStorage.setItem('user', data.userInfo); // 사용자 정보 저장
-            localStorage.setItem('accessToken', data.accessToken); // Access Token 저장
-            window.location.href = '/userInsert'; // 회원가입 페이지로 리다이렉트
-          } else {
-            localStorage.setItem('accessToken', data.accessToken); // Access Token 저장
-            handleLogin(JSON.parse(data.userInfo).id, 'kakao');
-          }
-        })
-        .catch((error) => {
-          console.error('카카오 콜백 처리 실패:', error);
-          alert('로그인 처리 중 오류가 발생했습니다.');
-        });
-    }
-  }, []);
+  }, [navigate]);
 
   return <></>;
 };

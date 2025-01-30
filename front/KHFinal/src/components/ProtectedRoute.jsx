@@ -1,48 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 
-const ProtectedRoute = ({ children, requiredRole, endpoint }) => {
-  const [isAuthorized, setIsAuthorized] = useState(null); // 권한 여부
-  const [isLoading, setIsLoading] = useState(true); // 로딩 상태
+const ProtectedRoute = ({ children, endpoint }) => {
+  const [isAuthorized, setIsAuthorized] = useState(null); // ✅ 권한 여부 상태
+  const [isLoading, setIsLoading] = useState(true); // ✅ 로딩 상태
 
   useEffect(() => {
-    const token = localStorage.getItem('userJwt'); // JWT 토큰 가져오기
-    alert('토큰: ' + token);
-    if (!token) {
-      setIsAuthorized(false); // 토큰이 없으면 권한 없음
-      setIsLoading(false);
-      return;
-    }
-
-    // 서버에 권한 확인 요청
-    alert('엔드포인트: ' + endpoint);
-    alert('토큰: ' + token);
+    // ✅ 서버에 로그인 상태 및 접근 권한 확인 요청 (JWT는 쿠키에서 자동 전송됨)
     fetch(`http://localhost:8080/auth/${endpoint}`, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`, // Authorization 헤더에 JWT 추가
-      },
+      credentials: 'include', // ✅ 쿠키를 자동 포함하여 요청
     })
       .then((response) => {
-        alert('응답: ' + response.ok);
-        if (response.ok) {
-          setIsAuthorized(true); // 권한 있음
-        } else {
-          setIsAuthorized(false); // 권한 없음
-        }
+        setIsAuthorized(response.ok); // ✅ HTTP 응답 상태가 200 OK이면 true, 아니면 false
       })
       .catch(() => {
-        setIsAuthorized(false); // 요청 실패 시 권한 없음
+        setIsAuthorized(false); // ❌ 요청 실패 시 권한 없음 처리
       })
       .finally(() => {
-        setIsLoading(false); // 로딩 종료
+        setIsLoading(false); // ✅ 로딩 종료
       });
   }, [endpoint]);
 
-  if (isLoading) return <div>로딩 중...</div>; // 로딩 상태 표시
-  if (!isAuthorized) return <Navigate to="/unauthorized" />; // 권한 없으면 리 다이렉트
+  if (isLoading) return <div>로딩 중...</div>; // ✅ 로딩 상태 표시
+  if (!isAuthorized) return <Navigate to="/unauthorized" />; // ❌ 권한 없으면 리디렉트
 
-  return <>{children}</>; // 권한이 있으면 자식 컴포넌트 렌더링
+  return <>{children}</>; // ✅ 권한이 있으면 자식 컴포넌트 렌더링
 };
 
 export default ProtectedRoute;

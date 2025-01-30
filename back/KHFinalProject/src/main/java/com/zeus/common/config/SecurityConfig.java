@@ -22,18 +22,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf().disable()
-            .cors().and() // CORS 설정 활성화
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 세션 비활성화
-            .and()
-            .authorizeHttpRequests()
-            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // OPTIONS 허용
-                .requestMatchers("/auth/jwtAdmin").hasRole("0") // ROLE_0만 접근 가능
-                .requestMatchers("/auth/jwtManager").hasAnyRole("0", "1") // ROLE_0, ROLE_1 접근 가능
-                .requestMatchers("/auth/jwtUser").hasAnyRole("0", "1", "2") // ROLE_0, ROLE_1, ROLE_2 접근 가능
-                .anyRequest().permitAll()
-            .and()
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .csrf(csrf -> csrf.disable()) // ✅ CSRF 비활성화 (JWT 사용 시 필요)
+            .cors(cors -> cors.configure(http)) // ✅ CORS 설정 활성화
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // ✅ 세션 사용 안함 (JWT 기반 인증)
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ✅ OPTIONS 요청 허용 (CORS preflight 요청 처리)
+                .requestMatchers("/auth/jwtAdmin").hasAuthority("ROLE_0") // ✅ ROLE_0만 접근 가능
+                .requestMatchers("/auth/jwtManager").hasAnyAuthority("ROLE_0", "ROLE_1") // ✅ ROLE_0, ROLE_1 접근 가능
+                .requestMatchers("/auth/jwtUser").hasAnyAuthority("ROLE_0", "ROLE_1", "ROLE_2") // ✅ ROLE_0, ROLE_1, ROLE_2 접근 가능
+                .anyRequest().permitAll() // ✅ 그 외 모든 요청 허용
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // ✅ JWT 인증 필터 추가
 
         return http.build();
     }
