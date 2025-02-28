@@ -72,4 +72,12 @@ public class JwtUtil {
         Claims claims = validateToken(token);
         return claims.getExpiration().before(new Date()); // 만료 시간이 현재보다 이전이면 true 반환
     }
+    
+    /** ✅ JWT에서 id,provider 추출해서 User에 담아서 반환 */
+    public User getIdProviderFromToken(String token) {
+    	User user= new User();
+    	user.setId(validateToken(token).get("id", String.class));
+    	user.setProvider(validateToken(token).get("provider", String.class));
+        return user;
+    }
 }

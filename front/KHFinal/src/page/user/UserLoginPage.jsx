@@ -11,10 +11,13 @@ const UserLoginPage = () => {
 
   useEffect(() => {
     // ✅ 이전 페이지 URL 저장 (document.referrer에서 경로 추출)
-    const referrerUrl = document.referrer ? new URL(document.referrer) : null;
-    const path = referrerUrl ? referrerUrl.pathname + referrerUrl.search : '/';
-    sessionStorage.setItem('preLoginUrl', path);
-
+    if (sessionStorage.getItem('preLoginUrl') === null) {
+      const referrerUrl = document.referrer ? new URL(document.referrer) : null;
+      const path = referrerUrl
+        ? referrerUrl.pathname + referrerUrl.search
+        : '/';
+      sessionStorage.setItem('preLoginUrl', path);
+    }
     // ✅ 로그인 상태 확인
     checkAuthStatus()
       .then((data) => {

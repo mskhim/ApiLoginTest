@@ -16,7 +16,6 @@ function App() {
         <Routes>
           {/* 스프링부트, db, 리액트 연동 확인용 페이지 */}
           <Route path="/" element={<AdminMain />} />
-
           <Route path="/userLoginPage" element={<UserLoginPage />} />
           <Route path="/userLoginSuccess" element={<UserLoginSuccess />} />
           <Route path="/userInsert" element={<UserInsert />} />
@@ -33,6 +32,19 @@ function App() {
           >
             <Route path="adminStats" element={<AdminStats />} />
           </Route>
+
+          {/* ProtectedRoute 내부에서 여러 개의 경로 관리 */}
+          <Route
+            path="/manager/*"
+            element={
+              <ProtectedRoute requiredRole={1} endpoint="jwtManager">
+                <UserLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="userDelete" element={<UserDelete />} />
+          </Route>
+
           {/* ProtectedRoute 내부에서 여러 개의 경로 관리 */}
           <Route
             path="/user/*"

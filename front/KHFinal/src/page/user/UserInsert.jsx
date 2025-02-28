@@ -27,6 +27,7 @@ const UserInsert = () => {
       provider: userData.provider,
       name: userData.name,
       email: userData.email,
+      role: '2',
     });
 
     // ✅ 컴포넌트 언마운트 시 `sessionStorage`에서 'user' 삭제

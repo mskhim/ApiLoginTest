@@ -38,7 +38,6 @@ export const handleNaverCallback = async (code, state) => {
       `${NAVER_API_BASE_URL}/callback?code=${code}&state=${state}`
     );
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
     const data = await response.json();
     return { isRegistered: data.isRegistered, user: data.user || null }; // 🔹 user 데이터 추가 반환
   } catch (error) {
@@ -54,7 +53,6 @@ export const handleKakaoCallback = async (code) => {
   try {
     const response = await fetch(`${KAKAO_API_BASE_URL}/callback?code=${code}`);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
     const data = await response.json();
     return { isRegistered: data.isRegistered, user: data.user || null }; // 🔹 user 데이터 추가 반환
   } catch (error) {
@@ -67,6 +65,7 @@ export const handleKakaoCallback = async (code) => {
  * 회원가입 처리
  */
 export const handleRegister = async (formData) => {
+  alert(formData.id);
   try {
     const response = await fetch('http://localhost:8080/user/insert', {
       method: 'POST',
@@ -173,10 +172,35 @@ export const fetchWithAuth = async (url, options = {}) => {
 
   return response;
 };
+
 /**
- * jwt 쿠키에서 확인하는 메소드
+ * jwt 쿠키에 저장 되어있는지 확인하는 메소드
  */
 export const checkAuthStatus = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/user/check-auth', {
+      method: 'GET',
+      credentials: 'include', // ✅ 쿠키 자동 포함
+    });
+
+    if (!response.ok) {
+      console.warn('JWT가 없거나 만료됨. 로그아웃 처리');
+      return { authenticated: false };
+    }
+
+    const data = await response.json();
+    return data; // { authenticated: true, user: {...} }
+  } catch (error) {
+    console.error('인증 상태 확인 실패:', error);
+    return { authenticated: false };
+  }
+};
+
+/**
+ * jwt 쿠키에 저장 되어있는지 확인하는 메소드
+ */
+
+export const getUserIdProvider = async () => {
   try {
     const response = await fetch('http://localhost:8080/user/check-auth', {
       method: 'GET',

@@ -47,7 +47,7 @@ const UserLoginSuccess = () => {
     if (provider && code) {
       handleSocialLogin(provider, code, state);
     }
-  }, [navigate]);
+  });
 
   return <></>;
 };

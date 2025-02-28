@@ -34,7 +34,7 @@ public class UserController {
 	@Autowired
 	private JwtUtil JwtUtil;
 
-	// 네이버 로그인 URL 반환
+	// 회원가입 처리
 	@PostMapping("/insert")
 	public ResponseEntity<?> insert(@RequestBody User user) {
 		log.info(user + "");
@@ -45,6 +45,7 @@ public class UserController {
 			if (user.getPwd() == null) {
 				user.setPwd("default_password");
 			}
+			log.info(user.getRole()+"");
 			boolean isInserted = service.insert(user);
 
 			if (isInserted) {
@@ -216,9 +217,7 @@ public class UserController {
 	public ResponseEntity<Map<String, Object>> refreshToken(
 	    @CookieValue(name = "refresh_token", required = false) String refreshToken,
 	    HttpServletResponse response) {
-
 	    log.info("🔹 JWT 갱신 요청");
-
 	    if (refreshToken == null || JwtUtil.isTokenExpired(refreshToken)) {
 	        return ResponseEntity.status(401).body(Map.of("error", "유효하지 않거나 만료된 리프레시 토큰"));
 	    }
@@ -267,7 +266,6 @@ public class UserController {
 	        ObjectMapper objectMapper = new ObjectMapper();
 	        JsonNode rootNode = objectMapper.readTree(userInfo);
 	        JsonNode responseNode = rootNode.get("response");
-
 	        if (responseNode != null) {
 	            User user = new User();
 	            user.setId(responseNode.get("id").asText());
@@ -325,5 +323,7 @@ public class UserController {
 	    }
 	    return null;
 	}
+	
+	
 
 }
